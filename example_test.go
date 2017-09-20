@@ -31,7 +31,7 @@ func ExampleServer() {
 		}
 		defer batch.Rollback()
 
-		if err := batch.Put([]byte(cmd.Args[0]), []byte(cmd.Args[1])); err != nil {
+		if err := batch.Put(cmd.Args[0], cmd.Args[1]); err != nil {
 			return err
 		}
 		if err := batch.Commit(); err != nil {
@@ -53,7 +53,7 @@ func ExampleServer() {
 		}
 		defer batch.Rollback()
 
-		val, err := batch.Get([]byte(cmd.Args[0]))
+		val, err := batch.Get(cmd.Args[0])
 		if err != nil {
 			return err
 		}
