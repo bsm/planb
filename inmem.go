@@ -12,29 +12,21 @@ var errInvalidStorageKey = errors.New("planb: invalid storage key")
 
 const numInMemShards = 64
 
-type inMemStore struct {
+type InmemStore struct {
 	shards [numInMemShards]*inMemShard
 }
 
 // NewInmemStore opens a new simplistic, non-transactional in-memory KVStore
-func NewInmemStore() KVStore {
-	store := new(inMemStore)
+func NewInmemStore() *InmemStore {
+	store := new(InmemStore)
 	for i := 0; i < numInMemShards; i++ {
 		store.shards[i] = &inMemShard{data: make(map[string][]byte)}
 	}
 	return store
 }
 
-// Close implements KVStore
-func (*inMemStore) Close() error { return nil }
-
-// Begin implements KVStore
-func (s *inMemStore) Begin(_ bool) (KVBatch, error) {
-	return &inMemoryBatch{inMemStore: s}, nil
-}
-
-// Get implements KVBatch
-func (s *inMemStore) Get(key []byte) ([]byte, error) {
+// Get retrieves a key
+func (s *InmemStore) Get(key []byte) ([]byte, error) {
 	if len(key) == 0 {
 		return nil, errInvalidStorageKey
 	}
@@ -43,7 +35,8 @@ func (s *inMemStore) Get(key []byte) ([]byte, error) {
 	return val, nil
 }
 
-func (s *inMemStore) put(key, val []byte) error {
+// Put sets a key
+func (s *InmemStore) Put(key, val []byte) error {
 	if len(key) == 0 {
 		return errInvalidStorageKey
 	}
@@ -51,8 +44,13 @@ func (s *inMemStore) put(key, val []byte) error {
 	return nil
 }
 
-// Snapshot implements KVStore
-func (s *inMemStore) Snapshot(w io.Writer) error {
+// Delete deletes a key
+func (s *InmemStore) Delete(key []byte) error {
+	return s.Put(key, nil)
+}
+
+// Snapshot implements Store
+func (s *InmemStore) Snapshot(w io.Writer) error {
 	buf := make([]byte, binary.MaxVarintLen64)
 	for i := 0; i < numInMemShards; i++ {
 		if err := s.shards[i].Snapshot(buf, w); err != nil {
@@ -62,8 +60,8 @@ func (s *inMemStore) Snapshot(w io.Writer) error {
 	return nil
 }
 
-// Restore implements KVStore
-func (s *inMemStore) Restore(r io.Reader) error {
+// Restore implements Store
+func (s *InmemStore) Restore(r io.Reader) error {
 	snap := &inMemSnapshotIterator{Reader: bufio.NewReader(r)}
 	for {
 		err := snap.Next()
@@ -72,7 +70,7 @@ func (s *inMemStore) Restore(r io.Reader) error {
 		} else if err != nil {
 			return err
 		}
-		if err := s.put(snap.key, snap.val); err != nil {
+		if err := s.Put(snap.key, snap.val); err != nil {
 			return err
 		}
 	}
@@ -153,43 +151,4 @@ func (s *inMemSnapshotIterator) Next() error {
 		return err
 	}
 	return nil
-}
-
-// --------------------------------------------------------------------
-
-type inMemoryBatchWrite struct{ key, val []byte }
-
-type inMemoryBatch struct {
-	*inMemStore
-	stash []inMemoryBatchWrite
-}
-
-// Rollback implements KVBatch
-func (b *inMemoryBatch) Rollback() error {
-	b.stash = b.stash[:0]
-	return nil
-}
-
-// Commit implements KVBatch
-func (b *inMemoryBatch) Commit() error {
-	for _, w := range b.stash {
-		if err := b.inMemStore.put(w.key, w.val); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// Put implements KVBatch
-func (b *inMemoryBatch) Put(key, val []byte) error {
-	if len(key) == 0 {
-		return errInvalidStorageKey
-	}
-	b.stash = append(b.stash, inMemoryBatchWrite{key: key, val: val})
-	return nil
-}
-
-// Delete implements KVBatch
-func (b *inMemoryBatch) Delete(key []byte) error {
-	return b.Put(key, nil)
 }

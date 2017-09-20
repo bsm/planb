@@ -52,9 +52,9 @@ var _ = Describe("Server", func() {
 		conf := raft.DefaultConfig()
 		conf.Logger = log.New(ioutil.Discard, "", 0)
 
-		kvs := planb.NewInmemStore()
+		store := planb.NewInmemStore()
 		rfs := raft.NewInmemStore()
-		subject, err = planb.NewServer(addr, dir, kvs, rfs, rfs, conf)
+		subject, err = planb.NewServer(addr, dir, store, rfs, rfs, conf)
 		Expect(err).NotTo(HaveOccurred())
 
 		subject.HandleRO("echo", planb.HandlerFunc(func(cmd *planb.Command) interface{} {

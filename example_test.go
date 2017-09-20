@@ -10,8 +10,11 @@ import (
 )
 
 func ExampleServer() {
+	// Open a store
+	store := planb.NewInmemStore()
+
 	// Init server
-	srv, err := planb.NewServer("10.0.0.1:7230", ".", planb.NewInmemStore(), raft.NewInmemStore(), raft.NewInmemStore(), nil)
+	srv, err := planb.NewServer("10.0.0.1:7230", ".", store, raft.NewInmemStore(), raft.NewInmemStore(), nil)
 	if err != nil {
 		panic(err)
 	}
@@ -25,19 +28,9 @@ func ExampleServer() {
 			return fmt.Errorf("wrong number of arguments for '%q'", cmd.Name)
 		}
 
-		batch, err := srv.KV().Begin(true)
-		if err != nil {
+		if err := store.Put(cmd.Args[0], cmd.Args[1]); err != nil {
 			return err
 		}
-		defer batch.Rollback()
-
-		if err := batch.Put(cmd.Args[0], cmd.Args[1]); err != nil {
-			return err
-		}
-		if err := batch.Commit(); err != nil {
-			return err
-		}
-
 		return "OK"
 	}))
 
@@ -47,13 +40,7 @@ func ExampleServer() {
 			return fmt.Errorf("wrong number of arguments for '%q'", cmd.Name)
 		}
 
-		batch, err := srv.KV().Begin(false)
-		if err != nil {
-			return err
-		}
-		defer batch.Rollback()
-
-		val, err := batch.Get(cmd.Args[0])
+		val, err := store.Get(cmd.Args[0])
 		if err != nil {
 			return err
 		}

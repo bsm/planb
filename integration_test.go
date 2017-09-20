@@ -98,12 +98,13 @@ type testNode struct {
 	dir string
 	srv *planb.Server
 	cln *client.Pool
+	kvs *planb.InmemStore
 }
 
 func newTestNode() (*testNode, error) {
 	var err error
 
-	node := new(testNode)
+	node := &testNode{kvs: planb.NewInmemStore()}
 	node.dir, err = ioutil.TempDir("", "planb-test-node")
 	if err != nil {
 		node.Close()
@@ -118,7 +119,7 @@ func newTestNode() (*testNode, error) {
 
 	cfg := raft.DefaultConfig()
 	cfg.LogOutput = ioutil.Discard
-	node.srv, err = planb.NewServer(raft.ServerAddress(node.Addr()), node.dir, planb.NewInmemStore(), raft.NewInmemStore(), raft.NewInmemStore(), cfg)
+	node.srv, err = planb.NewServer(raft.ServerAddress(node.Addr()), node.dir, node.kvs, raft.NewInmemStore(), raft.NewInmemStore(), cfg)
 	if err != nil {
 		node.Close()
 		return nil, err
@@ -190,20 +191,9 @@ func (n *testNode) handleSet(cmd *planb.Command) interface{} {
 	if len(cmd.Args) != 2 {
 		return fmt.Errorf("wrong number of arguments for '%q'", cmd.Name)
 	}
-
-	batch, err := n.srv.KV().Begin(false)
-	if err != nil {
+	if err := n.kvs.Put(cmd.Args[0], cmd.Args[1]); err != nil {
 		return err
 	}
-	defer batch.Rollback()
-
-	if err := batch.Put([]byte(cmd.Args[0]), []byte(cmd.Args[1])); err != nil {
-		return err
-	}
-	if err := batch.Commit(); err != nil {
-		return err
-	}
-
 	return "OK"
 }
 
@@ -212,13 +202,7 @@ func (n *testNode) handleGet(cmd *planb.Command) interface{} {
 		return fmt.Errorf("wrong number of arguments for '%q'", cmd.Name)
 	}
 
-	batch, err := n.srv.KV().Begin(false)
-	if err != nil {
-		return err
-	}
-	defer batch.Rollback()
-
-	val, err := batch.Get([]byte(cmd.Args[0]))
+	val, err := n.kvs.Get(cmd.Args[0])
 	if err != nil {
 		return err
 	}

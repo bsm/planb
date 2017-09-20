@@ -1,6 +1,8 @@
 package planb
 
 import (
+	"io"
+
 	"github.com/bsm/redeo/resp"
 )
 
@@ -41,3 +43,13 @@ type HandlerFunc func(cmd *Command) interface{}
 
 // ServeRequest implements Handler
 func (f HandlerFunc) ServeRequest(cmd *Command) interface{} { return f(cmd) }
+
+// Store is an abstraction of an underlying
+// store implementation. It must have snapshot
+// and restore capabilities.
+type Store interface {
+	// Restore restores the store from a data stream.
+	Restore(r io.Reader) error
+	// Snapshot writes a snapshot to the provided writer.
+	Snapshot(w io.Writer) error
+}

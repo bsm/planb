@@ -16,10 +16,10 @@ import (
 
 // Server implements a peer
 type Server struct {
-	addr raft.ServerAddress
-	rsrv *redeo.Server
-	ctrl *raft.Raft
-	kvs  KVStore
+	addr  raft.ServerAddress
+	rsrv  *redeo.Server
+	ctrl  *raft.Raft
+	store Store
 
 	handlers    map[string]Handler
 	closeOnExit []func() error
@@ -29,7 +29,7 @@ type Server struct {
 // must advertise an address and use a local dir location
 // and a key-value store for persistence.
 // It also accepts a log and a stable store.
-func NewServer(advertise raft.ServerAddress, dir string, kvs KVStore, logs raft.LogStore, stable raft.StableStore, conf *raft.Config) (*Server, error) {
+func NewServer(advertise raft.ServerAddress, dir string, store Store, logs raft.LogStore, stable raft.StableStore, conf *raft.Config) (*Server, error) {
 	// ensure dir is created
 	if err := os.MkdirAll(dir, 0777); err != nil {
 		return nil, err
@@ -47,7 +47,7 @@ func NewServer(advertise raft.ServerAddress, dir string, kvs KVStore, logs raft.
 	s := &Server{
 		addr:     advertise,
 		rsrv:     redeo.NewServer(nil),
-		kvs:      kvs,
+		store:    store,
 		handlers: make(map[string]Handler),
 	}
 
@@ -104,9 +104,6 @@ func (s *Server) ListenAndServe() error {
 
 // Serve starts serving in the given listener
 func (s *Server) Serve(lis net.Listener) error { return s.rsrv.Serve(lis) }
-
-// KV exposes the internal KVStore
-func (s *Server) KV() KVStore { return s.kvs }
 
 // EnableSentinel enables sentinel support using the given master name,
 // defaults to "mymaster".

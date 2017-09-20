@@ -33,10 +33,10 @@ func (f *fsmWrapper) Apply(log *raft.Log) interface{} {
 	return h.ServeRequest(&cmd)
 }
 
-func (f *fsmWrapper) Restore(rc io.ReadCloser) error      { return f.kvs.Restore(rc) }
-func (f *fsmWrapper) Snapshot() (raft.FSMSnapshot, error) { return &fsmSnapshot{KVStore: f.kvs}, nil }
+func (f *fsmWrapper) Restore(rc io.ReadCloser) error      { return f.store.Restore(rc) }
+func (f *fsmWrapper) Snapshot() (raft.FSMSnapshot, error) { return &fsmSnapshot{Store: f.store}, nil }
 
-type fsmSnapshot struct{ KVStore }
+type fsmSnapshot struct{ Store }
 
 func (s *fsmSnapshot) Release() {}
 func (s *fsmSnapshot) Persist(sink raft.SnapshotSink) error {
