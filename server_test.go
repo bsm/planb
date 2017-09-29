@@ -3,7 +3,6 @@ package planb_test
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net"
 	"os"
 	"path/filepath"
@@ -18,66 +17,61 @@ import (
 )
 
 var _ = Describe("Server", func() {
-	var subject *planb.Server
-	var dir string
 
-	const addr = "127.0.0.1:31313"
+	var serve = func(cb func(string, client.Conn)) func() {
+		return func() {
+			// init dir
+			dir, err := ioutil.TempDir("", "planb-test")
+			Expect(err).NotTo(HaveOccurred())
+			defer os.RemoveAll(dir)
 
-	var listen = func(cb func(cn client.Conn)) {
-		lis, err := net.Listen("tcp", addr)
-		Expect(err).NotTo(HaveOccurred())
-		defer lis.Close()
+			// init listener
+			lis, err := net.Listen("tcp", "127.0.0.1:")
+			Expect(err).NotTo(HaveOccurred())
+			addr := lis.Addr().String()
+			defer lis.Close()
 
-		go subject.Serve(lis)
+			// init config
+			conf := raft.DefaultConfig()
+			conf.LogOutput = ioutil.Discard
 
-		pool, err := client.New(&pool.Options{InitialSize: 1}, func() (net.Conn, error) {
-			return net.Dial("tcp", addr)
-		})
-		Expect(err).NotTo(HaveOccurred())
-		defer pool.Close()
+			// setup server
+			store := planb.NewInmemStore()
+			rfs := raft.NewInmemStore()
+			srv, err := planb.NewServer(raft.ServerAddress(addr), dir, store, rfs, rfs, conf)
+			Expect(err).NotTo(HaveOccurred())
+			defer srv.Close()
 
-		conn, err := pool.Get()
-		Expect(err).NotTo(HaveOccurred())
-		defer pool.Put(conn)
+			// handle commands
+			srv.HandleRO("echo", planb.HandlerFunc(func(cmd *planb.Command) interface{} {
+				if len(cmd.Args) < 1 {
+					return fmt.Errorf("wrong number of arguments for '%s'", cmd.Name)
+				}
+				return cmd.Args[0]
+			}))
+			srv.HandleRO("now", planb.HandlerFunc(func(cmd *planb.Command) interface{} {
+				return time.Now().Unix()
+			}))
+			srv.HandleRW("reset", 0, planb.HandlerFunc(func(cmd *planb.Command) interface{} {
+				return true
+			}))
 
-		cb(conn)
+			// start server
+			go srv.Serve(lis)
+
+			pool, err := client.New(&pool.Options{InitialSize: 1}, func() (net.Conn, error) {
+				return net.Dial("tcp", addr)
+			})
+			Expect(err).NotTo(HaveOccurred())
+			defer pool.Close()
+
+			conn, err := pool.Get()
+			Expect(err).NotTo(HaveOccurred())
+			cb(dir, conn)
+		}
 	}
 
-	BeforeEach(func() {
-		var err error
-
-		dir, err = ioutil.TempDir("", "planb")
-		Expect(err).NotTo(HaveOccurred())
-
-		conf := raft.DefaultConfig()
-		conf.Logger = log.New(ioutil.Discard, "", 0)
-
-		store := planb.NewInmemStore()
-		rfs := raft.NewInmemStore()
-		subject, err = planb.NewServer(addr, dir, store, rfs, rfs, conf)
-		Expect(err).NotTo(HaveOccurred())
-
-		subject.HandleRO("echo", planb.HandlerFunc(func(cmd *planb.Command) interface{} {
-			if len(cmd.Args) < 1 {
-				return fmt.Errorf("wrong number of arguments for '%s'", cmd.Name)
-			}
-			return cmd.Args[0]
-		}))
-
-		subject.HandleRW("now", 0, planb.HandlerFunc(func(cmd *planb.Command) interface{} {
-			if len(cmd.Args) != 0 {
-				return fmt.Errorf("wrong number of arguments for '%s'", cmd.Name)
-			}
-			return time.Now().Unix()
-		}))
-	})
-
-	AfterEach(func() {
-		Expect(subject.Close()).To(Succeed())
-		Expect(os.RemoveAll(dir)).To(Succeed())
-	})
-
-	It("should create dir structure", func() {
+	It("should create dir structure", serve(func(dir string, cn client.Conn) {
 		Expect(filepath.Glob(filepath.Join(dir, "*"))).To(ConsistOf(
 			dir+"/node-id",
 			dir+"/snap",
@@ -86,22 +80,22 @@ var _ = Describe("Server", func() {
 		data, err := ioutil.ReadFile(dir + "/node-id")
 		Expect(err).NotTo(HaveOccurred())
 		Expect(string(data)).To(HaveLen(36))
-	})
+	}))
 
-	It("should handle read-only commands", func() {
-		listen(func(cn client.Conn) {
-			cn.WriteCmdString("ECHO", "HeLLo")
-			Expect(cn.Flush()).To(Succeed())
-			Expect(cn.ReadBulkString()).To(Equal("HeLLo"))
-		})
-	})
+	It("should handle read-only commands", serve(func(dir string, cn client.Conn) {
+		cn.WriteCmdString("ECHO", "HeLLo")
+		Expect(cn.Flush()).To(Succeed())
+		Expect(cn.ReadBulkString()).To(Equal("HeLLo"))
 
-	It("should fail on read/write commands", func() {
-		listen(func(cn client.Conn) {
-			cn.WriteCmdString("NOW")
-			Expect(cn.Flush()).To(Succeed())
-			Expect(cn.ReadError()).To(Equal("READONLY node is not the leader"))
-		})
-	})
+		cn.WriteCmdString("NOW")
+		Expect(cn.Flush()).To(Succeed())
+		Expect(cn.ReadInt()).To(BeNumerically("~", time.Now().Unix(), 2))
+	}))
+
+	It("should fail on read/write commands if not leader", serve(func(dir string, cn client.Conn) {
+		cn.WriteCmdString("RESET")
+		Expect(cn.Flush()).To(Succeed())
+		Expect(cn.ReadError()).To(Equal("READONLY node is not the leader"))
+	}))
 
 })
