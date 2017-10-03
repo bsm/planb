@@ -5,7 +5,7 @@
   branch = "master"
   name = "github.com/armon/go-metrics"
   packages = ["."]
-  revision = "0a12dc6f6b9da6da644031a1b9b5a85478c5ee27"
+  revision = "9a4b6e10bed6220a1665955aa2b75afc91eb10b3"
 
 [[projects]]
   name = "github.com/bsm/pool"
@@ -16,14 +16,14 @@
 [[projects]]
   name = "github.com/bsm/redeo"
   packages = [".","client","info","resp"]
-  revision = "a364de74ce02a7c9e37ff739f81815a3ad873b3b"
-  version = "v2.0.1"
+  revision = "336e2fc60b58e362653c3b68128e03f629c12ba1"
+  version = "v2.0.2"
 
 [[projects]]
   branch = "master"
   name = "github.com/bsm/redeoraft"
   packages = ["."]
-  revision = "83a0e3bbed0f46ba81098d1bf4d4ef4666288486"
+  revision = "524c56e14758eddd10e1292519a30f0e2067a2d6"
 
 [[projects]]
   name = "github.com/google/uuid"

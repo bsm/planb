@@ -108,7 +108,10 @@ func (s *Server) Serve(lis net.Listener) error { return s.rsrv.Serve(lis) }
 // EnableSentinel enables sentinel support using the given master name,
 // defaults to "mymaster".
 func (s *Server) EnableSentinel(name string) {
-	s.rsrv.Handle("sentinel", redeoraft.Sentinel(name, s.ctrl))
+	broker := redeo.NewPubSubBroker()
+	s.rsrv.Handle("sentinel", redeoraft.Sentinel(name, s.ctrl, broker))
+	s.rsrv.Handle("publish", broker.Publish())
+	s.rsrv.Handle("subscribe", broker.Subscribe())
 }
 
 // HandleRO handles read-only commands
