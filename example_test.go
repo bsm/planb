@@ -14,11 +14,11 @@ func ExampleServer() {
 	store := planb.NewInmemStore()
 
 	// Init config
-	config := planb.NewConfig()
-	config.Sentinel.MasterName = "mymaster" // handle SENTINEL commands
+	conf := planb.NewConfig()
+	conf.Sentinel.MasterName = "mymaster" // handle SENTINEL commands
 
 	// Init server
-	srv, err := planb.NewServer("10.0.0.1:7230", ".", store, raft.NewInmemStore(), raft.NewInmemStore(), nil)
+	srv, err := planb.NewServer("10.0.0.1:7230", ".", store, raft.NewInmemStore(), raft.NewInmemStore(), conf)
 	if err != nil {
 		panic(err)
 	}
