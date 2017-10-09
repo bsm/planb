@@ -32,8 +32,8 @@ var _ = Describe("Server", func() {
 			defer lis.Close()
 
 			// init config
-			conf := raft.DefaultConfig()
-			conf.LogOutput = ioutil.Discard
+			conf := planb.NewConfig()
+			conf.Raft.LogOutput = ioutil.Discard
 
 			// setup server
 			store := planb.NewInmemStore()

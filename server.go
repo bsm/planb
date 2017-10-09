@@ -29,7 +29,7 @@ type Server struct {
 // must advertise an address and use a local dir location
 // and a key-value store for persistence.
 // It also accepts a log and a stable store.
-func NewServer(advertise raft.ServerAddress, dir string, store Store, logs raft.LogStore, stable raft.StableStore, conf *raft.Config) (*Server, error) {
+func NewServer(advertise raft.ServerAddress, dir string, store Store, logs raft.LogStore, stable raft.StableStore, conf *Config) (*Server, error) {
 	// ensure dir is created
 	if err := os.MkdirAll(dir, 0777); err != nil {
 		return nil, err
@@ -37,9 +37,9 @@ func NewServer(advertise raft.ServerAddress, dir string, store Store, logs raft.
 
 	// create/normalise config
 	if conf == nil {
-		conf = raft.DefaultConfig()
+		conf = NewConfig()
 	}
-	if err := normNodeID(conf, filepath.Join(dir, "node-id")); err != nil {
+	if err := conf.norm(filepath.Join(dir, "node-id")); err != nil {
 		return nil, err
 	}
 
@@ -52,7 +52,7 @@ func NewServer(advertise raft.ServerAddress, dir string, store Store, logs raft.
 	}
 
 	// init RAFT stable snapshots
-	snaps, err := raft.NewFileSnapshotStoreWithLogger(filepath.Join(dir, "snap"), 2, conf.Logger)
+	snaps, err := raft.NewFileSnapshotStoreWithLogger(filepath.Join(dir, "snap"), 2, conf.Raft.Logger)
 	if err != nil {
 		_ = s.Close()
 		return nil, err
@@ -65,7 +65,7 @@ func NewServer(advertise raft.ServerAddress, dir string, store Store, logs raft.
 	s.closeOnExit = append(s.closeOnExit, trans.Close)
 
 	// init RAFT controller
-	ctrl, err := raft.NewRaft(conf, &fsmWrapper{Server: s}, logs, stable, snaps, trans)
+	ctrl, err := raft.NewRaft(conf.Raft, &fsmWrapper{Server: s}, logs, stable, snaps, trans)
 	if err != nil {
 		_ = s.Close()
 		return nil, err
@@ -75,7 +75,7 @@ func NewServer(advertise raft.ServerAddress, dir string, store Store, logs raft.
 
 	// expose more info
 	sinf := s.rsrv.Info().Section("Server")
-	sinf.Register("node_id", info.StringValue(conf.LocalID))
+	sinf.Register("node_id", info.StringValue(conf.Raft.LocalID))
 	sinf.Register("tcp_addr", info.StringValue(advertise))
 
 	// install default commands
@@ -85,7 +85,17 @@ func NewServer(advertise raft.ServerAddress, dir string, store Store, logs raft.
 	s.rsrv.Handle("raftstats", redeoraft.Stats(ctrl))
 	s.rsrv.Handle("raftstate", redeoraft.State(ctrl))
 	s.rsrv.Handle("raftpeers", redeoraft.Peers(ctrl))
+	s.rsrv.Handle("raftadd", redeoraft.AddPeers(ctrl))
+	s.rsrv.Handle("raftremove", redeoraft.RemovePeers(ctrl))
 	s.rsrv.HandleFunc("raftbootstrap", s.bootstrap)
+
+	// Snables sentinel support if master name given.
+	if name := conf.Sentinel.MasterName; name != "" {
+		broker := redeo.NewPubSubBroker()
+		s.rsrv.Handle("sentinel", redeoraft.Sentinel(name, ctrl, broker))
+		s.rsrv.Handle("publish", broker.Publish())
+		s.rsrv.Handle("subscribe", broker.Subscribe())
+	}
 
 	return s, nil
 }
@@ -104,15 +114,6 @@ func (s *Server) ListenAndServe() error {
 
 // Serve starts serving in the given listener
 func (s *Server) Serve(lis net.Listener) error { return s.rsrv.Serve(lis) }
-
-// EnableSentinel enables sentinel support using the given master name,
-// defaults to "mymaster".
-func (s *Server) EnableSentinel(name string) {
-	broker := redeo.NewPubSubBroker()
-	s.rsrv.Handle("sentinel", redeoraft.Sentinel(name, s.ctrl, broker))
-	s.rsrv.Handle("publish", broker.Publish())
-	s.rsrv.Handle("subscribe", broker.Subscribe())
-}
 
 // HandleRO handles read-only commands
 func (s *Server) HandleRO(name string, h Handler) {

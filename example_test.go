@@ -13,14 +13,15 @@ func ExampleServer() {
 	// Open a store
 	store := planb.NewInmemStore()
 
+	// Init config
+	config := planb.NewConfig()
+	config.Sentinel.MasterName = "mymaster" // handle SENTINEL commands
+
 	// Init server
 	srv, err := planb.NewServer("10.0.0.1:7230", ".", store, raft.NewInmemStore(), raft.NewInmemStore(), nil)
 	if err != nil {
 		panic(err)
 	}
-
-	// Handle SENTINEL commands
-	srv.EnableSentinel("mymaster")
 
 	// Setup SET handler
 	srv.HandleRW("SET", 0, planb.HandlerFunc(func(cmd *planb.Command) interface{} {

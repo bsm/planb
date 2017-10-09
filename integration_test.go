@@ -117,9 +117,10 @@ func newTestNode() (*testNode, error) {
 		return nil, err
 	}
 
-	cfg := raft.DefaultConfig()
-	cfg.LogOutput = ioutil.Discard
-	node.srv, err = planb.NewServer(raft.ServerAddress(node.Addr()), node.dir, node.kvs, raft.NewInmemStore(), raft.NewInmemStore(), cfg)
+	conf := planb.NewConfig()
+	conf.Raft.LogOutput = ioutil.Discard
+
+	node.srv, err = planb.NewServer(raft.ServerAddress(node.Addr()), node.dir, node.kvs, raft.NewInmemStore(), raft.NewInmemStore(), conf)
 	if err != nil {
 		node.Close()
 		return nil, err
