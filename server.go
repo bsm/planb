@@ -85,8 +85,8 @@ func NewServer(advertise raft.ServerAddress, dir string, store Store, logs raft.
 	s.rsrv.Handle("raftstats", redeoraft.Stats(ctrl))
 	s.rsrv.Handle("raftstate", redeoraft.State(ctrl))
 	s.rsrv.Handle("raftpeers", redeoraft.Peers(ctrl))
-	s.rsrv.Handle("raftadd", redeoraft.AddPeers(ctrl))
-	s.rsrv.Handle("raftremove", redeoraft.RemovePeers(ctrl))
+	s.rsrv.Handle("raftadd", redeoraft.AddPeer(ctrl))
+	s.rsrv.Handle("raftremove", redeoraft.RemovePeer(ctrl))
 	s.rsrv.HandleFunc("raftbootstrap", s.bootstrap)
 
 	// Snables sentinel support if master name given.

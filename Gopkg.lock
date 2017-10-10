@@ -23,7 +23,7 @@
   branch = "master"
   name = "github.com/bsm/redeoraft"
   packages = ["."]
-  revision = "fbaa4e517c9fec40ae194d71f29dfbd93c484372"
+  revision = "0b95fc7b1733f217fd695f92d527f7d4ce7f231c"
 
 [[projects]]
   name = "github.com/google/uuid"
