@@ -16,14 +16,14 @@
 [[projects]]
   name = "github.com/bsm/redeo"
   packages = [".","client","info","resp"]
-  revision = "968cb609ebaa5d9e749423785d2136cf3fc537ea"
-  version = "v2.0.3"
+  revision = "ca9653582952543d063437f46f927c1a3c3878ae"
+  version = "v2.1.0"
 
 [[projects]]
   branch = "master"
   name = "github.com/bsm/redeoraft"
   packages = ["."]
-  revision = "39edb364516833dbe06e2ae3948ab34d458d00b3"
+  revision = "2f599ff009935e65668d259bba69b959795315c2"
 
 [[projects]]
   name = "github.com/google/uuid"
