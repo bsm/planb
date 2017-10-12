@@ -59,9 +59,7 @@ func NewServer(advertise raft.ServerAddress, dir string, store Store, logs raft.
 	}
 
 	// init RAFT transport
-	trans := redeoraft.NewTransport(s.rsrv, advertise, &redeoraft.Options{
-		Timeout: time.Second,
-	})
+	trans := redeoraft.NewTransport(s.rsrv, advertise, conf.Transport)
 	s.closeOnExit = append(s.closeOnExit, trans.Close)
 
 	// init RAFT controller

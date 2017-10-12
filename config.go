@@ -1,11 +1,17 @@
 package planb
 
-import "github.com/hashicorp/raft"
+import (
+	"github.com/bsm/redeoraft"
+	"github.com/hashicorp/raft"
+)
 
 // Config contains server config directives
 type Config struct {
 	// Raft configuration options
 	Raft *raft.Config
+
+	// Transport configuration options
+	Transport *redeoraft.Config
 
 	// Sentinel configuration
 	Sentinel struct {
