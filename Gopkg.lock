@@ -16,14 +16,14 @@
 [[projects]]
   name = "github.com/bsm/redeo"
   packages = [".","client","info","resp"]
-  revision = "ca9653582952543d063437f46f927c1a3c3878ae"
-  version = "v2.1.0"
+  revision = "50c4db19824f815754ee37a37d186dab8a8bbbf3"
+  version = "v2.1.1"
 
 [[projects]]
   branch = "master"
   name = "github.com/bsm/redeoraft"
   packages = ["."]
-  revision = "2f599ff009935e65668d259bba69b959795315c2"
+  revision = "dfe5ba31e9962ae19c67691761a64b45d53490e6"
 
 [[projects]]
   name = "github.com/google/uuid"
@@ -77,13 +77,13 @@
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "ebfc5b4631820b793c9010c87fd8fef0f39eb082"
+  revision = "686000749eaec0b8855b8eef5336cf63899fe51d"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/text"
   packages = ["encoding","encoding/charmap","encoding/htmlindex","encoding/internal","encoding/internal/identifier","encoding/japanese","encoding/korean","encoding/simplifiedchinese","encoding/traditionalchinese","encoding/unicode","internal/gen","internal/tag","internal/utf8internal","language","runes","transform","unicode/cldr"]
-  revision = "825fc78a2fd6fa0a5447e300189e3219e05e1f25"
+  revision = "c01e4764d870b77f8abe5096ee19ad20d80e8075"
 
 [[projects]]
   branch = "v2"
