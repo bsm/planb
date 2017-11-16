@@ -23,6 +23,8 @@ func respondWith(w resp.ResponseWriter, v interface{}) {
 	switch v := v.(type) {
 	case nil:
 		w.AppendNil()
+	case CustomResponse:
+		v.AppendTo(w)
 	case error:
 		w.AppendError("ERR " + v.Error())
 	case bool:
@@ -77,8 +79,6 @@ func respondWith(w resp.ResponseWriter, v interface{}) {
 			w.AppendBulkString(k)
 			w.AppendBulkString(s)
 		}
-	case CustomResponse:
-		v.AppendTo(w)
 	default:
 		w.AppendErrorf("ERR unsupported response type %T", v)
 	}

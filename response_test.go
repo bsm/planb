@@ -3,6 +3,7 @@ package planb_test
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"strconv"
 
 	"github.com/bsm/planb"
@@ -35,6 +36,27 @@ var _ = DescribeTable("respondWith",
 	Entry("[]int", []int{3, 5, 2}, "*3\r\n:3\r\n:5\r\n:2\r\n"),
 	Entry("[]int64", []int64{7, 8, 3}, "*3\r\n:7\r\n:8\r\n:3\r\n"),
 	Entry("map[string]string", map[string]string{"a": "b"}, "*2\r\n$1\r\na\r\n$1\r\nb\r\n"),
+	Entry("custom response", &customResponse{Host: "foo", Port: 8888}, "$17\r\ncustom 'foo:8888'\r\n"),
+	Entry("custom error", customError("bar"), "-WRONG bar\r\n"),
 
 	Entry("not supported", uint(1<<63+7), "-ERR unsupported response type uint\r\n"),
 )
+
+type customResponse struct {
+	Host string
+	Port int
+}
+
+func (r *customResponse) AppendTo(w resp.ResponseWriter) {
+	w.AppendBulkString(fmt.Sprintf("custom '%s:%d'", r.Host, r.Port))
+}
+
+type customError string
+
+func (r customError) AppendTo(w resp.ResponseWriter) {
+	w.AppendError(r.Error())
+}
+
+func (r customError) Error() string {
+	return "WRONG " + string(r)
+}
