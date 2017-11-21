@@ -2,6 +2,7 @@ package planb
 
 import (
 	"io"
+	"time"
 
 	"github.com/bsm/redeo/resp"
 )
@@ -43,6 +44,25 @@ type HandlerFunc func(cmd *Command) interface{}
 
 // ServeRequest implements Handler
 func (f HandlerFunc) ServeRequest(cmd *Command) interface{} { return f(cmd) }
+
+// --------------------------------------------------------------------
+
+// HandlerOpts contain options for handler execution.
+type HandlerOpts struct {
+	// Timeout is an optional timeout for mutating commands. It indicates
+	// the maximum duration the server is willing to wait for the application
+	// of the command. Minimum: 1s, default: 10s.
+	Timeout time.Duration
+}
+
+func (o *HandlerOpts) getTimeout() time.Duration {
+	if o != nil && o.Timeout >= time.Second {
+		return o.Timeout
+	}
+	return 10 * time.Second
+}
+
+// --------------------------------------------------------------------
 
 // Store is an abstraction of an underlying
 // store implementation. It must have snapshot

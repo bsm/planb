@@ -5,7 +5,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/bsm/redeo"
 	"github.com/bsm/redeo/info"
@@ -113,21 +112,16 @@ func (s *Server) ListenAndServe() error {
 // Serve starts serving in the given listener
 func (s *Server) Serve(lis net.Listener) error { return s.rsrv.Serve(lis) }
 
-// HandleRO handles read-only commands
-func (s *Server) HandleRO(name string, h Handler) {
-	s.rsrv.Handle(name, readOnlyHandler{h: h})
+// HandleRO handles readonly commands
+func (s *Server) HandleRO(name string, opt *HandlerOpts, h Handler) {
+	s.rsrv.Handle(name, readOnlyHandler{h: h, o: opt})
 }
 
-// HandleRW handles read/write commands. These can only be applied to the master node
-// and are replicated to slaves. An optional timeout can be specified to
-// indicate the maximum the duration the server is willing to wait for the application
-// of the command. Minimum: 1s, default: 10s.
-func (s *Server) HandleRW(name string, timeout time.Duration, h Handler) {
-	if timeout < time.Second {
-		timeout = 10 * time.Second
-	}
+// HandleRW handles commands that may result in modifications. These can only be
+// applied to the master node and are then replicated to slaves.
+func (s *Server) HandleRW(name string, opt *HandlerOpts, h Handler) {
 	s.handlers[strings.ToLower(name)] = h
-	s.rsrv.Handle(name, replicatingHandler{s: s, timeout: timeout})
+	s.rsrv.Handle(name, replicatingHandler{s: s, o: opt})
 }
 
 // Close closes the server

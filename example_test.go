@@ -24,7 +24,7 @@ func ExampleServer() {
 	}
 
 	// Setup SET handler
-	srv.HandleRW("SET", 0, planb.HandlerFunc(func(cmd *planb.Command) interface{} {
+	srv.HandleRW("SET", nil, planb.HandlerFunc(func(cmd *planb.Command) interface{} {
 		if len(cmd.Args) != 2 {
 			return fmt.Errorf("wrong number of arguments for '%q'", cmd.Name)
 		}
@@ -36,7 +36,7 @@ func ExampleServer() {
 	}))
 
 	// Setup GET handler
-	srv.HandleRO("GET", planb.HandlerFunc(func(cmd *planb.Command) interface{} {
+	srv.HandleRO("GET", nil, planb.HandlerFunc(func(cmd *planb.Command) interface{} {
 		if len(cmd.Args) != 1 {
 			return fmt.Errorf("wrong number of arguments for '%q'", cmd.Name)
 		}

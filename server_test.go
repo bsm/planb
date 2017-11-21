@@ -43,16 +43,16 @@ var _ = Describe("Server", func() {
 			defer srv.Close()
 
 			// handle commands
-			srv.HandleRO("echo", planb.HandlerFunc(func(cmd *planb.Command) interface{} {
+			srv.HandleRO("echo", nil, planb.HandlerFunc(func(cmd *planb.Command) interface{} {
 				if len(cmd.Args) < 1 {
 					return fmt.Errorf("wrong number of arguments for '%s'", cmd.Name)
 				}
 				return cmd.Args[0]
 			}))
-			srv.HandleRO("now", planb.HandlerFunc(func(cmd *planb.Command) interface{} {
+			srv.HandleRO("now", nil, planb.HandlerFunc(func(cmd *planb.Command) interface{} {
 				return time.Now().Unix()
 			}))
-			srv.HandleRW("reset", 0, planb.HandlerFunc(func(cmd *planb.Command) interface{} {
+			srv.HandleRW("reset", nil, planb.HandlerFunc(func(cmd *planb.Command) interface{} {
 				return true
 			}))
 

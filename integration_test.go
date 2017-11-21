@@ -132,8 +132,8 @@ func newTestNode() (*testNode, error) {
 		return nil, err
 	}
 
-	node.srv.HandleRW("set", 0, planb.HandlerFunc(node.handleSet))
-	node.srv.HandleRO("get", planb.HandlerFunc(node.handleGet))
+	node.srv.HandleRW("set", nil, planb.HandlerFunc(node.handleSet))
+	node.srv.HandleRO("get", nil, planb.HandlerFunc(node.handleGet))
 
 	go node.srv.Serve(node.lis)
 	return node, err

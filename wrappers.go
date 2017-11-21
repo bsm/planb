@@ -7,7 +7,6 @@ import (
 	"io"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/bsm/redeo/resp"
 	"github.com/hashicorp/raft"
@@ -48,7 +47,10 @@ func (s *fsmSnapshot) Persist(sink raft.SnapshotSink) error {
 
 // --------------------------------------------------------------------
 
-type readOnlyHandler struct{ h Handler }
+type readOnlyHandler struct {
+	h Handler
+	o *HandlerOpts
+}
 
 func (h readOnlyHandler) ServeRedeo(w resp.ResponseWriter, c *resp.Command) {
 	v := h.h.ServeRequest(&Command{
@@ -64,8 +66,7 @@ func (h readOnlyHandler) ServeRedeo(w resp.ResponseWriter, c *resp.Command) {
 
 type replicatingHandler struct {
 	s *Server
-
-	timeout time.Duration
+	o *HandlerOpts
 }
 
 func (h replicatingHandler) ServeRedeo(w resp.ResponseWriter, c *resp.Command) {
@@ -81,7 +82,7 @@ func (h replicatingHandler) ServeRedeo(w resp.ResponseWriter, c *resp.Command) {
 		return
 	}
 
-	future := h.s.ctrl.Apply(buf.Bytes(), h.timeout)
+	future := h.s.ctrl.Apply(buf.Bytes(), h.o.getTimeout())
 	err := future.Error()
 	switch err {
 	case raft.ErrNotLeader:
