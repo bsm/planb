@@ -36,11 +36,11 @@ var _ = Describe("Server (integration)", func() {
 			Expect(err).NotTo(HaveOccurred())
 		}
 		for _, n := range nodes {
-			Expect(n.Cmd("raftbootstrap", nodes[0].Addr(), nodes[1].Addr(), nodes[2].Addr())).To(Equal("OK"))
+			Expect(n.Cmd("raft", "bootstrap", nodes[0].Addr(), nodes[1].Addr(), nodes[2].Addr())).To(Equal("OK"))
 		}
 
 		Eventually(func() (string, error) {
-			return nodes[0].Cmd("raftleader")
+			return nodes[0].Cmd("raft", "leader")
 		}, "10s").ShouldNot(BeEmpty())
 
 		leader, err = nodes.Find("leader")
@@ -57,7 +57,7 @@ var _ = Describe("Server (integration)", func() {
 	}))
 
 	It("should boot and elect leader", skipOnShort(func() {
-		Expect(nodes[0].Cmd("raftleader")).To(Equal(leader.Addr()))
+		Expect(nodes[0].Cmd("raft", "leader")).To(Equal(leader.Addr()))
 	}))
 
 	It("should accept writes on leader and replicate to followers", skipOnShort(func() {
@@ -79,7 +79,7 @@ type testNodes []*testNode
 
 func (nn testNodes) Find(s string) (*testNode, error) {
 	for _, n := range nn {
-		x, err := n.Cmd("raftstate")
+		x, err := n.Cmd("raft", "state")
 		if err != nil {
 			return nil, err
 		}

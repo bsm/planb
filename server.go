@@ -78,13 +78,15 @@ func NewServer(advertise raft.ServerAddress, dir string, store Store, logs raft.
 	// install default commands
 	s.rsrv.Handle("ping", redeo.Ping())
 	s.rsrv.Handle("info", redeo.Info(s.rsrv))
-	s.rsrv.Handle("raftleader", redeoraft.Leader(ctrl))
-	s.rsrv.Handle("raftstats", redeoraft.Stats(ctrl))
-	s.rsrv.Handle("raftstate", redeoraft.State(ctrl))
-	s.rsrv.Handle("raftpeers", redeoraft.Peers(ctrl))
-	s.rsrv.Handle("raftadd", redeoraft.AddPeer(ctrl))
-	s.rsrv.Handle("raftremove", redeoraft.RemovePeer(ctrl))
-	s.rsrv.HandleFunc("raftbootstrap", s.bootstrap)
+	s.rsrv.Handle("raft", redeo.SubCommands{
+		"leader":    redeoraft.Leader(ctrl),
+		"stats":     redeoraft.Stats(ctrl),
+		"state":     redeoraft.State(ctrl),
+		"peers":     redeoraft.Peers(ctrl),
+		"add":       redeoraft.AddPeer(ctrl),
+		"remove":    redeoraft.RemovePeer(ctrl),
+		"bootstrap": redeo.HandlerFunc(s.bootstrap),
+	})
 
 	// Snables sentinel support if master name given.
 	if name := conf.Sentinel.MasterName; name != "" {
