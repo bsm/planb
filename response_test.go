@@ -38,7 +38,7 @@ var _ = DescribeTable("respondWith",
 	Entry("[]int64", []int64{7, 8, 3}, "*3\r\n:7\r\n:8\r\n:3\r\n"),
 	Entry("[][]int64", [][]int64{{1, 2}, {3, 4}}, "*2\r\n*2\r\n:1\r\n:2\r\n*2\r\n:3\r\n:4\r\n"),
 	Entry("map[string]string", map[string]string{"a": "b"}, "*2\r\n$1\r\na\r\n$1\r\nb\r\n"),
-	Entry("map[int64]float64", map[int64]float64{1: 1.1, 2: 2.2}, "*4\r\n:1\r\n+1.1\r\n:2\r\n+2.2\r\n"),
+	Entry("map[int64]float64", map[int64]float64{1: 1.1}, "*2\r\n:1\r\n+1.1\r\n"),
 	Entry("custom response", &customResponse{Host: "foo", Port: 8888}, "$17\r\ncustom 'foo:8888'\r\n"),
 	Entry("custom error", customError("bar"), "-WRONG bar\r\n"),
 

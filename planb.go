@@ -1,7 +1,9 @@
 package planb
 
 import (
+	"fmt"
 	"io"
+	"strings"
 	"time"
 
 	"github.com/bsm/redeo/resp"
@@ -45,6 +47,26 @@ type HandlerFunc func(cmd *Command) interface{}
 
 // ServeRequest implements Handler
 func (f HandlerFunc) ServeRequest(cmd *Command) interface{} { return f(cmd) }
+
+// SubCommands returns a handler that is parsing sub-commands
+type SubCommands map[string]Handler
+
+// ServeRequest implements Handler
+func (s SubCommands) ServeRequest(cmd *Command) interface{} {
+	if len(cmd.Args) == 0 {
+		return fmt.Errorf("wrong number of arguments for '%s'", cmd.Name)
+	}
+
+	firstArg := cmd.Args[0].String()
+	if h, ok := s[strings.ToLower(firstArg)]; ok {
+		return h.ServeRequest(&Command{
+			Name: cmd.Name + " " + firstArg,
+			Args: cmd.Args[1:],
+		})
+	}
+
+	return fmt.Errorf("Unknown %s subcommand '%s'", strings.ToLower(cmd.Name), firstArg)
+}
 
 // --------------------------------------------------------------------
 
