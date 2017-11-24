@@ -124,6 +124,9 @@ func (s *Server) HandleRW(name string, opt *HandlerOpts, h Handler) {
 	s.rsrv.Handle(name, replicatingHandler{s: s, o: opt})
 }
 
+// Raft exposes the underlying raft node controller
+func (s *Server) Raft() RaftCtrl { return s.ctrl }
+
 // Close closes the server
 func (s *Server) Close() error {
 	var err error

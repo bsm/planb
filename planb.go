@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/bsm/redeo/resp"
+	"github.com/hashicorp/raft"
 )
 
 // Command represents a command sent by the client
@@ -72,4 +73,24 @@ type Store interface {
 	Restore(r io.Reader) error
 	// Snapshot writes a snapshot to the provided writer.
 	Snapshot(w io.Writer) error
+}
+
+// RaftCtrl is an interface to the underlying raft node controller
+type RaftCtrl interface {
+	// AppliedIndex returns the last index applied to the FSM.
+	AppliedIndex() uint64
+	// GetConfiguration returns the latest configuration and its associated index currently in use.
+	GetConfiguration() raft.ConfigurationFuture
+	// LastContact returns the time of last contact by a leader.
+	LastContact() time.Time
+	// LastIndex returns the last index in stable storage, either from the last log or from the last snapshot.
+	LastIndex() uint64
+	// Leader is used to return the current leader of the cluster. It may return empty string if there is no current leader or the leader is unknown.
+	Leader() raft.ServerAddress
+	// State is used to return the current raft state.
+	State() raft.RaftState
+	// Stats is used to return a map of various internal stats.
+	Stats() map[string]string
+	// String returns a string representation of this Raft node.
+	String() string
 }
