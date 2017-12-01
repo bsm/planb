@@ -19,7 +19,7 @@ var bufPool = sync.Pool{New: func() interface{} { return new(bytes.Buffer) }}
 type fsmWrapper struct{ *Server }
 
 func (f *fsmWrapper) Apply(log *raft.Log) interface{} {
-	var cmd Command
+	var cmd resp.Command
 	if err := gob.NewDecoder(bytes.NewReader(log.Data)).Decode(&cmd); err != nil {
 		return err
 	}
@@ -29,7 +29,16 @@ func (f *fsmWrapper) Apply(log *raft.Log) interface{} {
 		return fmt.Errorf("unknown command '%s'", cmd.Name)
 	}
 
-	return h.ServeRequest(&cmd)
+	b := bufPool.Get().(*bytes.Buffer)
+	b.Reset()
+	w := resp.NewResponseWriter(b)
+	h.ServeRedeo(w, &cmd)
+
+	if err := w.Flush(); err != nil {
+		bufPool.Put(b)
+		return err
+	}
+	return b
 }
 
 func (f *fsmWrapper) Restore(rc io.ReadCloser) error      { return f.store.Restore(rc) }
@@ -47,23 +56,6 @@ func (s *fsmSnapshot) Persist(sink raft.SnapshotSink) error {
 
 // --------------------------------------------------------------------
 
-type readOnlyHandler struct {
-	h Handler
-	o *HandlerOpts
-}
-
-func (h readOnlyHandler) ServeRedeo(w resp.ResponseWriter, c *resp.Command) {
-	v := h.h.ServeRequest(&Command{
-		Name: c.Name,
-		Args: c.Args(),
-	})
-	if v == nil {
-		w.AppendNil()
-	} else {
-		respondWith(w, v)
-	}
-}
-
 type replicatingHandler struct {
 	s *Server
 	o *HandlerOpts
@@ -74,10 +66,7 @@ func (h replicatingHandler) ServeRedeo(w resp.ResponseWriter, c *resp.Command) {
 	buf.Reset()
 	defer bufPool.Put(buf)
 
-	if err := gob.NewEncoder(buf).Encode(&Command{
-		Name: c.Name,
-		Args: c.Args(),
-	}); err != nil {
+	if err := gob.NewEncoder(buf).Encode(c); err != nil {
 		w.AppendError("ERR " + err.Error())
 		return
 	}
@@ -94,9 +83,15 @@ func (h replicatingHandler) ServeRedeo(w resp.ResponseWriter, c *resp.Command) {
 	case nil:
 	}
 
-	if v := future.Response(); v == nil {
+	switch res := future.Response().(type) {
+	case *bytes.Buffer:
+		if _, err := res.WriteTo(w); err != nil {
+			w.AppendError("ERR " + err.Error())
+		}
+		bufPool.Put(res)
+	case error:
+		w.AppendError("ERR " + err.Error())
+	default:
 		w.AppendNil()
-	} else {
-		respondWith(w, v)
 	}
 }

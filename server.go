@@ -20,7 +20,7 @@ type Server struct {
 	ctrl  *raft.Raft
 	store Store
 
-	handlers    map[string]Handler
+	handlers    map[string]redeo.Handler
 	closeOnExit []func() error
 }
 
@@ -47,7 +47,7 @@ func NewServer(advertise raft.ServerAddress, dir string, store Store, logs raft.
 		addr:     advertise,
 		rsrv:     redeo.NewServer(nil),
 		store:    store,
-		handlers: make(map[string]Handler),
+		handlers: make(map[string]redeo.Handler),
 	}
 
 	// init RAFT stable snapshots
@@ -115,13 +115,13 @@ func (s *Server) ListenAndServe() error {
 func (s *Server) Serve(lis net.Listener) error { return s.rsrv.Serve(lis) }
 
 // HandleRO handles readonly commands
-func (s *Server) HandleRO(name string, opt *HandlerOpts, h Handler) {
-	s.rsrv.Handle(name, readOnlyHandler{h: h, o: opt})
+func (s *Server) HandleRO(name string, opt *HandlerOpts, h redeo.Handler) {
+	s.rsrv.Handle(name, h)
 }
 
 // HandleRW handles commands that may result in modifications. These can only be
 // applied to the master node and are then replicated to slaves.
-func (s *Server) HandleRW(name string, opt *HandlerOpts, h Handler) {
+func (s *Server) HandleRW(name string, opt *HandlerOpts, h redeo.Handler) {
 	s.handlers[strings.ToLower(name)] = h
 	s.rsrv.Handle(name, replicatingHandler{s: s, o: opt})
 }
@@ -148,7 +148,7 @@ func (s *Server) bootstrap(w resp.ResponseWriter, c *resp.Command) {
 	}
 
 	servers := make([]raft.Server, c.ArgN())
-	for i, arg := range c.Args() {
+	for i, arg := range c.Args {
 		addr := arg.String()
 		conf, err := retrieveServerConfig(addr)
 		if err != nil {

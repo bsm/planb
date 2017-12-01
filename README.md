@@ -25,50 +25,38 @@ import (
 )
 
 func main() {
+	// Open a store
+	store := planb.NewInmemStore()
+
+	// Init config
+	conf := planb.NewConfig()
+	conf.Sentinel.MasterName = "mymaster"	// handle SENTINEL commands
+
 	// Init server
-	srv, err := planb.NewServer("10.0.0.1:7230", ".", planb.NewInmemStore(), raft.NewInmemStore(), raft.NewInmemStore(), nil)
+	srv, err := planb.NewServer("10.0.0.1:7230", ".", store, raft.NewInmemStore(), raft.NewInmemStore(), conf)
 	if err != nil {
 		panic(err)
 	}
 
-	// Handle SENTINEL commands
-	srv.EnableSentinel("mymaster")
-
 	// Setup SET handler
-	srv.HandleRW("SET", 0, planb.HandlerFunc(func(cmd *planb.Command) interface{} {
+	srv.HandleRW("SET", nil, redeo.WrapperFunc(func(cmd *resp.Command) interface{} {
 		if len(cmd.Args) != 2 {
-			return fmt.Errorf("wrong number of arguments for '%q'", cmd.Name)
+			return redeo.ErrWrongNumberOfArgs(cmd.Name)
 		}
 
-		batch, err := srv.KV().Begin(true)
-		if err != nil {
+		if err := store.Put(cmd.Args[0], cmd.Args[1]); err != nil {
 			return err
 		}
-		defer batch.Rollback()
-
-		if err := batch.Put([]byte(cmd.Args[0]), []byte(cmd.Args[1])); err != nil {
-			return err
-		}
-		if err := batch.Commit(); err != nil {
-			return err
-		}
-
 		return "OK"
 	}))
 
 	// Setup GET handler
-	srv.HandleRO("GET", planb.HandlerFunc(func(cmd *planb.Command) interface{} {
+	srv.HandleRO("GET", nil, redeo.WrapperFunc(func(cmd *resp.Command) interface{} {
 		if len(cmd.Args) != 1 {
-			return fmt.Errorf("wrong number of arguments for '%q'", cmd.Name)
+			return redeo.ErrWrongNumberOfArgs(cmd.Name)
 		}
 
-		batch, err := srv.KV().Begin(false)
-		if err != nil {
-			return err
-		}
-		defer batch.Rollback()
-
-		val, err := batch.Get([]byte(cmd.Args[0]))
+		val, err := store.Get(cmd.Args[0])
 		if err != nil {
 			return err
 		}

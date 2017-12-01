@@ -14,16 +14,16 @@
   version = "v0.8.0"
 
 [[projects]]
+  branch = "feature/v2.2"
   name = "github.com/bsm/redeo"
   packages = [".","client","info","resp"]
-  revision = "eeefcdf0e34637fd61fb3c9a79a36f36efe4cc5b"
-  version = "v2.1.3"
+  revision = "de1fd29ea03834c9ba1343ee93ed202272d47046"
 
 [[projects]]
   branch = "master"
   name = "github.com/bsm/redeoraft"
   packages = ["."]
-  revision = "dd930594e56ffa5c5bf05af72c00127e673cc72c"
+  revision = "2588ecef6d23c23c62e1d618907ec85f992f2580"
 
 [[projects]]
   name = "github.com/google/uuid"
@@ -57,7 +57,7 @@
 
 [[projects]]
   name = "github.com/onsi/ginkgo"
-  packages = [".","config","extensions/table","internal/codelocation","internal/containernode","internal/failer","internal/leafnodes","internal/remote","internal/spec","internal/spec_iterator","internal/specrunner","internal/suite","internal/testingtproxy","internal/writer","reporters","reporters/stenographer","reporters/stenographer/support/go-colorable","reporters/stenographer/support/go-isatty","types"]
+  packages = [".","config","internal/codelocation","internal/containernode","internal/failer","internal/leafnodes","internal/remote","internal/spec","internal/spec_iterator","internal/specrunner","internal/suite","internal/testingtproxy","internal/writer","reporters","reporters/stenographer","reporters/stenographer/support/go-colorable","reporters/stenographer/support/go-isatty","types"]
   revision = "9eda700730cba42af70d53180f9dcce9266bc2bc"
   version = "v1.4.0"
 
@@ -71,19 +71,19 @@
   branch = "master"
   name = "golang.org/x/net"
   packages = ["html","html/atom","html/charset"]
-  revision = "c7086645de248775cbf2373cf5ca4d2fa664b8c1"
+  revision = "a8b9294777976932365dabb6640cf1468d95c70f"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "a13efeb2fd213cf4be7227992aa54519af3b2ac0"
+  revision = "8b4580aae2a0dd0c231a45d3ccb8434ff533b840"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/text"
   packages = ["encoding","encoding/charmap","encoding/htmlindex","encoding/internal","encoding/internal/identifier","encoding/japanese","encoding/korean","encoding/simplifiedchinese","encoding/traditionalchinese","encoding/unicode","internal/gen","internal/tag","internal/utf8internal","language","runes","transform","unicode/cldr"]
-  revision = "88f656faf3f37f690df1a32515b479415e1a6769"
+  revision = "75cc3cad82b5f47d3fb229ddda8c5167da14f294"
 
 [[projects]]
   branch = "v2"
@@ -94,6 +94,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "9db7da080907f2d627bffe19a3c477e3790b787f579b99b90f618d27cc743e6d"
+  inputs-digest = "9154eba03ef7f4e623a34b46e0759a8bd743ce503576306d097c5c9a4d74fd3f"
   solver-name = "gps-cdcl"
   solver-version = 1

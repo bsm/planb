@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/bsm/planb"
+	"github.com/bsm/redeo"
 	"github.com/bsm/redeo/client"
 	"github.com/bsm/redeo/resp"
 	"github.com/hashicorp/raft"
@@ -132,8 +133,8 @@ func newTestNode() (*testNode, error) {
 		return nil, err
 	}
 
-	node.srv.HandleRW("set", nil, planb.HandlerFunc(node.handleSet))
-	node.srv.HandleRO("get", nil, planb.HandlerFunc(node.handleGet))
+	node.srv.HandleRW("set", nil, redeo.WrapperFunc(node.handleSet))
+	node.srv.HandleRO("get", nil, redeo.WrapperFunc(node.handleGet))
 
 	go node.srv.Serve(node.lis)
 	return node, err
@@ -188,9 +189,9 @@ func (n *testNode) Close() {
 	}
 }
 
-func (n *testNode) handleSet(cmd *planb.Command) interface{} {
+func (n *testNode) handleSet(cmd *resp.Command) interface{} {
 	if len(cmd.Args) != 2 {
-		return fmt.Errorf("wrong number of arguments for '%q'", cmd.Name)
+		return redeo.ErrWrongNumberOfArgs(cmd.Name)
 	}
 	if err := n.kvs.Put(cmd.Args[0], cmd.Args[1]); err != nil {
 		return err
@@ -198,9 +199,9 @@ func (n *testNode) handleSet(cmd *planb.Command) interface{} {
 	return "OK"
 }
 
-func (n *testNode) handleGet(cmd *planb.Command) interface{} {
+func (n *testNode) handleGet(cmd *resp.Command) interface{} {
 	if len(cmd.Args) != 1 {
-		return fmt.Errorf("wrong number of arguments for '%q'", cmd.Name)
+		return redeo.ErrWrongNumberOfArgs(cmd.Name)
 	}
 
 	val, err := n.kvs.Get(cmd.Args[0])

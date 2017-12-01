@@ -1,7 +1,6 @@
 package planb_test
 
 import (
-	"fmt"
 	"io/ioutil"
 	"net"
 	"os"
@@ -10,7 +9,9 @@ import (
 
 	"github.com/bsm/planb"
 	"github.com/bsm/pool"
+	"github.com/bsm/redeo"
 	"github.com/bsm/redeo/client"
+	"github.com/bsm/redeo/resp"
 	"github.com/hashicorp/raft"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -43,16 +44,16 @@ var _ = Describe("Server", func() {
 			defer srv.Close()
 
 			// handle commands
-			srv.HandleRO("echo", nil, planb.HandlerFunc(func(cmd *planb.Command) interface{} {
+			srv.HandleRO("echo", nil, redeo.WrapperFunc(func(cmd *resp.Command) interface{} {
 				if len(cmd.Args) < 1 {
-					return fmt.Errorf("wrong number of arguments for '%s'", cmd.Name)
+					return redeo.ErrWrongNumberOfArgs(cmd.Name)
 				}
 				return cmd.Args[0]
 			}))
-			srv.HandleRO("now", nil, planb.HandlerFunc(func(cmd *planb.Command) interface{} {
+			srv.HandleRO("now", nil, redeo.WrapperFunc(func(cmd *resp.Command) interface{} {
 				return time.Now().Unix()
 			}))
-			srv.HandleRW("reset", nil, planb.HandlerFunc(func(cmd *planb.Command) interface{} {
+			srv.HandleRW("reset", nil, redeo.WrapperFunc(func(cmd *resp.Command) interface{} {
 				return true
 			}))
 
