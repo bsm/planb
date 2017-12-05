@@ -14,16 +14,16 @@
   version = "v0.8.0"
 
 [[projects]]
-  branch = "feature/v2.2"
   name = "github.com/bsm/redeo"
   packages = [".","client","info","resp"]
-  revision = "de1fd29ea03834c9ba1343ee93ed202272d47046"
+  revision = "b255cb41e4d37036cdeb4fb6c8c186f4aae0eb76"
+  version = "v2.2.0"
 
 [[projects]]
   branch = "master"
   name = "github.com/bsm/redeoraft"
   packages = ["."]
-  revision = "2588ecef6d23c23c62e1d618907ec85f992f2580"
+  revision = "2d4cbbbd86000c481e5c9130fae0a3ec3d483a62"
 
 [[projects]]
   name = "github.com/google/uuid"
@@ -83,7 +83,7 @@
   branch = "master"
   name = "golang.org/x/text"
   packages = ["encoding","encoding/charmap","encoding/htmlindex","encoding/internal","encoding/internal/identifier","encoding/japanese","encoding/korean","encoding/simplifiedchinese","encoding/traditionalchinese","encoding/unicode","internal/gen","internal/tag","internal/utf8internal","language","runes","transform","unicode/cldr"]
-  revision = "75cc3cad82b5f47d3fb229ddda8c5167da14f294"
+  revision = "57961680700a5336d15015c8c50686ca5ba362a4"
 
 [[projects]]
   branch = "v2"
@@ -94,6 +94,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "9154eba03ef7f4e623a34b46e0759a8bd743ce503576306d097c5c9a4d74fd3f"
+  inputs-digest = "7964560114f8450f0eac3c48ef2fefb630045a32a08e7ad1829ceb2f9984a6ea"
   solver-name = "gps-cdcl"
   solver-version = 1
