@@ -18,7 +18,3 @@
 # [[override]]
 #  name = "github.com/x/y"
 #  version = "2.4.0"
-
-[[constraint]]
-  name = "github.com/bsm/redeo"
-  branch = "feature/v2.2"
