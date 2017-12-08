@@ -129,6 +129,9 @@ func (s *Server) HandleRW(name string, opt *HandlerOpts, h redeo.Handler) {
 // Raft exposes the underlying raft node controller
 func (s *Server) Raft() RaftCtrl { return s.ctrl }
 
+// Info server info
+func (s *Server) Info() *redeo.ServerInfo { return s.rsrv.Info() }
+
 // Close closes the server
 func (s *Server) Close() error {
 	var err error
