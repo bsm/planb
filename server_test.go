@@ -75,7 +75,7 @@ var _ = Describe("Server", func() {
 	It("should create dir structure", serve(func(dir string, cn client.Conn) {
 		Expect(filepath.Glob(filepath.Join(dir, "*"))).To(ConsistOf(
 			dir+"/node-id",
-			dir+"/snap",
+			dir+"/snapshots",
 		))
 
 		data, err := ioutil.ReadFile(dir + "/node-id")

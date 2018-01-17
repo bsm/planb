@@ -51,7 +51,7 @@ func NewServer(advertise raft.ServerAddress, dir string, store Store, logs raft.
 	}
 
 	// init RAFT stable snapshots
-	snaps, err := raft.NewFileSnapshotStoreWithLogger(filepath.Join(dir, "snap"), 2, conf.Raft.Logger)
+	snaps, err := raft.NewFileSnapshotStoreWithLogger(snapshotRootDir(dir), 2, conf.Raft.Logger)
 	if err != nil {
 		_ = s.Close()
 		return nil, err
@@ -167,4 +167,12 @@ func (s *Server) bootstrap(w resp.ResponseWriter, c *resp.Command) {
 	}
 
 	w.AppendOK()
+}
+
+func snapshotRootDir(dir string) string {
+	legacy := filepath.Join(dir, "snap")
+	if fi, err := os.Stat(legacy); err == nil && fi.IsDir() {
+		return legacy
+	}
+	return dir
 }
