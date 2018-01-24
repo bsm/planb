@@ -28,7 +28,7 @@
   branch = "master"
   name = "github.com/bsm/redeoraft"
   packages = ["."]
-  revision = "4d662581656c8b27a90cba6c143d3d17ba4a9b88"
+  revision = "e9ef53cc9d3bec0cc312db0f24385df974aedfee"
 
 [[projects]]
   name = "github.com/google/uuid"
@@ -112,13 +112,13 @@
     "html/atom",
     "html/charset"
   ]
-  revision = "5ccada7d0a7ba9aeb5d3aca8d3501b4c2a509fec"
+  revision = "0ed95abb35c445290478a5348a7b38bb154135fd"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "fff93fa7cd278d84afc205751523809c464168ab"
+  revision = "af50095a40f9041b3b38960738837185c26e9419"
 
 [[projects]]
   branch = "master"
