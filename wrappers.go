@@ -31,6 +31,7 @@ func (f *fsmWrapper) Apply(log *raft.Log) interface{} {
 
 	b := bufPool.Get().(*bytes.Buffer)
 	b.Reset()
+
 	w := resp.NewResponseWriter(b)
 	h.ServeRedeo(w, &cmd)
 
@@ -49,7 +50,8 @@ type fsmSnapshot struct{ Store }
 func (s *fsmSnapshot) Release() {}
 func (s *fsmSnapshot) Persist(sink raft.SnapshotSink) error {
 	if err := s.Snapshot(sink); err != nil {
-		return sink.Cancel()
+		_ = sink.Cancel()
+		return err
 	}
 	return sink.Close()
 }
